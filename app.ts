@@ -24,7 +24,13 @@ let needReboot: boolean = false;
 
 const saveTime = function (time?: number) {
     console.log(time);
-    fs.writeFile("system.txt", needReboot ? '1\n' : String(time || Number(new Date())) + '\n', function (error) {
+    let fileContent: string = fs.readFileSync("system.txt", "utf8");
+    let needPull: boolean = fileContent.indexOf('Pull') > 0;
+    let writeString: string = '';
+    writeString += needReboot ? '1\n' : String(time || Number(new Date())) + '\n';
+    if (fileContent.indexOf('push') > 0) writeString += 'push\n';
+    if (fileContent.indexOf('pull') > 0) writeString += 'pull\n';
+    fs.writeFile("system.txt", writeString, function (error) {
         if (error) throw error;
         console.log('write done');
         if (needReboot)

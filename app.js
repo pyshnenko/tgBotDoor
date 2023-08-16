@@ -26,7 +26,15 @@ setTimeout(() => door = true, 10000);
 let needReboot = false;
 const saveTime = function (time) {
     console.log(time);
-    fs.writeFile("system.txt", needReboot ? '1\n' : String(time || Number(new Date())) + '\n', function (error) {
+    let fileContent = fs.readFileSync("system.txt", "utf8");
+    let needPull = fileContent.indexOf('Pull') > 0;
+    let writeString = '';
+    writeString += needReboot ? '1\n' : String(time || Number(new Date())) + '\n';
+    if (fileContent.indexOf('push') > 0)
+        writeString += 'push\n';
+    if (fileContent.indexOf('pull') > 0)
+        writeString += 'pull\n';
+    fs.writeFile("system.txt", writeString, function (error) {
         if (error)
             throw error;
         console.log('write done');
