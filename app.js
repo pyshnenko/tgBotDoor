@@ -19,6 +19,7 @@ const Gpio = require('pigpio').Gpio;
 const os = require('os');
 const fs = require("fs");
 let ni = os.networkInterfaces();
+const vers = '1.0.0';
 console.log('Hello world');
 let door = false;
 setTimeout(() => door = true, 10000);
@@ -285,7 +286,7 @@ bot.on('text', (ctx) => __awaiter(void 0, void 0, void 0, function* () {
             console.log(session);
             if (ctx.message.text === 'Статус системы') {
                 ni = os.networkInterfaces();
-                ctx.reply(okLbl + 'Ок\n' + ni.wlan0[0].address);
+                ctx.reply(okLbl + 'Ок\n' + ni.wlan0[0].address + '\n' + vers);
             }
             else if ((typeof (session) === 'object') && (session.hasOwnProperty('mode'))) {
                 if (session.mode === 'addId') {
