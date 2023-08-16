@@ -21,9 +21,15 @@ do
   fi
   if [[ "$y" == "pull"* ]]; then
     echo "git pull"
+    git fetch --all
+    git reset --hard origin/main
+    git pull
   fi
   if [[ "$y" == "push"* ]]; then
     echo "git push"
+    git add .
+    git commit -m "$(date)"
+    git push origin main
   fi
   i=$((i+1))
 done
