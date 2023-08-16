@@ -23,6 +23,8 @@ do
     git fetch --all
     git reset --hard origin/main
     git pull
+    fidate=$(date +%s)
+    fidate=$((fidate+90000))
     echo "$fidate" > /home/pi/bot/system.txt
   fi
   if [[ "$y" == "push"* ]]; then
@@ -30,6 +32,8 @@ do
     git add .
     git commit -m "$(date)"
     git push origin main
+    fidate=$(date +%s)
+    fidate=$((fidate+90000))
     echo "$fidate" > /home/pi/bot/system.txt
   fi
   i=$((i+1))
