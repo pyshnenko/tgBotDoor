@@ -9,7 +9,6 @@ do
     ndate=$(date +%s)
     if (( $ndate > $y )); 
       then echo "date > 5"
-      echo "false" > /home/pi/bot/system.txt
       fidate=$(date +%s)
       fidate=$((fidate+90000))
       echo "$fidate" >> /home/pi/bot/system.txt
@@ -24,12 +23,14 @@ do
     git fetch --all
     git reset --hard origin/main
     git pull
+    echo "$fidate" > /home/pi/bot/system.txt
   fi
   if [[ "$y" == "push"* ]]; then
     echo "git push"
     git add .
     git commit -m "$(date)"
     git push origin main
+    echo "$fidate" > /home/pi/bot/system.txt
   fi
   i=$((i+1))
 done
