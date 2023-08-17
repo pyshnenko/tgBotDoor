@@ -29,7 +29,7 @@ const saveTime = function (time) {
     let fileContent = fs.readFileSync("system.txt", "utf8");
     let needPull = fileContent.indexOf('Pull') > 0;
     let writeString = '';
-    writeString += needReboot ? '1\n' : String(time || Number(new Date())) + '\n';
+    writeString += needReboot ? '1\n' : String(time || Math.floor(Number(new Date()) / 1000)) + '\n';
     if (fileContent.indexOf('push') > 0)
         writeString += 'push\n';
     if (fileContent.indexOf('pull') > 0)

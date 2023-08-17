@@ -22,7 +22,7 @@ do
     echo "git pull"
     git fetch --all
     git reset --hard origin/main
-    git pull
+    git pull origin main
     fidate=$(date +%s)
     fidate=$((fidate+90000))
     echo "$fidate" > /home/pi/bot/system.txt
