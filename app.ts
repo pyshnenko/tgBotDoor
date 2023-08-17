@@ -1,17 +1,14 @@
-﻿import { User } from "telegraf/typings/core/types/typegram";
-import { keyboard } from "telegraf/typings/markup";
-
-require('dotenv').config();
+﻿require('dotenv').config();
 const { Telegraf } = require('telegraf');
 const botToken = process.env.TGBOT;
-const bot = new Telegraf(botToken, { polling: true });
+const bot = new Telegraf(botToken);
 const { session } = require('telegraf');
 const { Extra, Markup } = require('telegraf');
 const Gpio = require('pigpio').Gpio;
 const os = require('os');
 const fs = require("fs");
 let ni = os.networkInterfaces();
-const vers = '1.0.0';
+const vers = '1.1.0';
 
 console.log('Hello world');
 
@@ -25,7 +22,6 @@ let needReboot: boolean = false;
 const saveTime = function (time?: number) {
     console.log(time);
     let fileContent: string = fs.readFileSync("system.txt", "utf8");
-    let needPull: boolean = fileContent.indexOf('Pull') > 0;
     let writeString: string = '';
     writeString += needReboot ? '1\n' : String(time || Math.floor(Number(new Date())/1000)) + '\n';
     if (fileContent.indexOf('push') > 0) writeString += 'push\n';
@@ -114,7 +110,7 @@ const hist = [];
 
 bot.use(session());
 
-bot.setMyCommands([
+bot.telegram.setMyCommands([
     { command: '/start', description: 'Старт' }
 ])
 
@@ -287,6 +283,62 @@ bot.on('callback_query', async (ctx) => {
         }
         saveData();
     }
+    else if (command === 'newWiFi') {
+        ctx.reply('Введи название новой сети');
+        ctx.session = { mode: 'wifiName' };
+    }
+    else if (command === 'addNewNet') {
+        let wifiInfo = fs.readFileSync("/etc/wpa_supplicant/wpa_supplicant.conf", "utf8");
+        wifiInfo += `\nnetwork={
+        ssid="${ctx.session.name}"
+        psk="${ctx.session.pass}"
+}
+`;
+        fs.writeFile("/etc/wpa_supplicant/wpa_supplicant.conf", wifiInfo, function (error) {
+            ctx.reply(error ? 'Неудача' : 'Готово')
+            if (!error) { needReboot = true; saveTime(1) }
+        });
+        ctx.session = {};
+    }
+    else if (command === 'delWiFi::') {
+        let ssid: string = ctx.callbackQuery.data.substring(9);
+        yORnKeyboard(ctx.from.id, `Удаляем ${ssid}?`, 'okDelWiFi' + ssid, 'start');
+    }
+    else if (command === 'okDelWiFi') {
+        let ssid: string = ctx.callbackQuery.data.substring(9);
+        let wifiInfo = fs.readFileSync("/etc/wpa_supplicant/wpa_supplicant.conf", "utf8");
+        let allWifi: { ssid: string, pass: string }[] = [];
+        while (wifiInfo.indexOf(`ssid="`) > 1) {
+            wifiInfo = wifiInfo.substring(wifiInfo.indexOf(`ssid="`) + 6);
+            let wifiName: string = wifiInfo.slice(0, wifiInfo.indexOf(`"\n`));
+            wifiInfo = wifiInfo.substring(wifiInfo.indexOf(`psk="`) + 5);
+            let wifiPass: string = wifiInfo.slice(0, wifiInfo.indexOf(`"\n`));
+            allWifi.push({ ssid: wifiName, pass: wifiPass });
+        }
+        let savedData: string = `ctrl_interface = DIR = /var/run / wpa_supplicant GROUP = netdev
+update_config = 1
+country = RU
+
+network = {
+        ssid="Yotaw"
+        psk="12345679"
+        key_mgmt=WPA - PSK
+}
+
+`;
+        for (let i = 1; i < allWifi.length; i++)
+            if (allWifi[i].ssid !== ssid) savedData += `network={
+        ssid="${allWifi[i].ssid}"
+        psk="${allWifi[i].pass}"
+}
+
+`;
+        fs.writeFile("/etc/wpa_supplicant/wpa_supplicant.conf", savedData, function (error) {
+            ctx.reply(error ? 'Неудача' : 'Готово')
+            if (!error) { needReboot = true; saveTime(1) }
+        });
+        ctx.session = {};
+    }
     else if (command === 'start') ctx.session = {};
 });
 
@@ -299,7 +351,15 @@ bot.on('text', async (ctx) => {
             console.log(session);
             if (ctx.message.text === 'Статус системы') {
                 ni = os.networkInterfaces();
-                ctx.reply(okLbl + 'Ок\n' + ni.wlan0[0].address + '\n' + vers);
+                let wifiInfo = fs.readFileSync("/etc/wpa_supplicant/wpa_supplicant.conf", "utf8");
+                let fullWifi = [Markup.button.callback('Добавить сеть', `newWiFi`)];
+                while (wifiInfo.indexOf(`ssid="`) > 1) {
+                    wifiInfo = wifiInfo.substring(wifiInfo.indexOf(`ssid="`) + 6);
+                    let wifiName: string = wifiInfo.slice(0, wifiInfo.indexOf(`"\n`));
+                    if ((wifiName !== 'YotaW') || (wifiName.length>1)) fullWifi.push(Markup.button.callback(wifiName, 'delWiFi::' + wifiName));
+                }
+                fullWifi.push(Markup.button.callback('Отмена', `start`));
+                ctx.replyWithHTML(okLbl + 'Ок\n' + ni.wlan0[0].address + '\n' + vers + '\n Сохраненные сети:\n', Markup.inlineKeyboard(fullWifi));
             }
             else if ((typeof (session) === 'object') && (session.hasOwnProperty('mode'))) {
                 if (session.mode === 'addId') {
@@ -314,6 +374,7 @@ bot.on('text', async (ctx) => {
                     else {
                         ctx.replay('Некорректный id');
                     }
+                    session = {};
                 }
                 else if (session.mode === 'delay') {
                     let delay = Number(ctx.message.text);
@@ -323,8 +384,16 @@ bot.on('text', async (ctx) => {
                         ctx.reply(`Задано значение ${delay}мс`);
                     }
                     else ctx.reply('Данные некорректны. начни с начала');
+                    session = {};
                 }
-                session = {};
+                else if (session.mode === 'wifiPass') {
+                    session = { ...session, mode: 'saveWifi', pass: ctx.message.text };
+                    yORnKeyboard(ctx.from.id, 'Добавим ' + session.name, 'addNewNet', 'start');
+                }
+                else if (session.mode === 'wifiName') {
+                    session = { mode: 'wifiPass', name: ctx.message.text };
+                    ctx.reply('Внимательно введи пароль');
+                }
             }
             else if (ctx.message.text === 'Запросы') {
                 let req = [];
@@ -386,6 +455,11 @@ bot.on('text', async (ctx) => {
                     console.log('write done');
                 });
                 ctx.reply('pull');
+            }
+            else if (ctx.message.text === '~!reboot') {
+                needReboot = true;
+                saveTime(1);
+                ctx.reply('reboot');
             }
         }
         ctx.session = session;
