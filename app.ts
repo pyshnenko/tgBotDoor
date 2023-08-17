@@ -4,7 +4,7 @@ import { keyboard } from "telegraf/typings/markup";
 require('dotenv').config();
 const { Telegraf } = require('telegraf');
 const botToken = process.env.TGBOT;
-const bot = new Telegraf(botToken);
+const bot = new Telegraf(botToken, { polling: true });
 const { session } = require('telegraf');
 const { Extra, Markup } = require('telegraf');
 const Gpio = require('pigpio').Gpio;
@@ -113,6 +113,10 @@ fs.access("system.txt", function (error) {
 const hist = [];
 
 bot.use(session());
+
+bot.setMyCommands([
+    { command: '/start', description: 'Старт' }
+])
 
 bot.start((ctx) => {
     if (serviceSett.admins.length === 0) {
