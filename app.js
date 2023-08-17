@@ -19,7 +19,7 @@ const Gpio = require('pigpio').Gpio;
 const os = require('os');
 const fs = require("fs");
 let ni = os.networkInterfaces();
-const vers = '1.0.0';
+const vers = '1.0.1';
 console.log('Hello world');
 let door = false;
 setTimeout(() => door = true, 10000);
