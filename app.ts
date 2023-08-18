@@ -382,10 +382,10 @@ bot.on('text', async (ctx) => {
             }
             else if (ctx.message.text === 'Пользователи') {
                 let req = '';
-                if (serviceSett.admins.length > 0) {
+                if (serviceSett.admins.length > 1) {
                     req += 'Админы: \n';
-                    serviceSett.admins.map((item: number) => {
-                        req += askName(item) + ', ' + item + '\n';
+                    serviceSett.admins.map((item: number, index:number) => {
+                        if (index !== 0) req += askName(item) + ', ' + item + '\n';
                     })
                 }
                 if (serviceSett.notAdmins.length > 0) {
@@ -394,7 +394,7 @@ bot.on('text', async (ctx) => {
                         req += askName(item) + ', ' + item + '\n';
                     })
                 }
-                ctx.reply(req);
+                ctx.reply(req===''?'Нет пользователей':req);
             }
             else if (ctx.message.text === 'Удалить пользователя') {
                 let req = [];
