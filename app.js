@@ -17,7 +17,7 @@ const Gpio = require('pigpio').Gpio;
 const os = require('os');
 const fs = require("fs");
 let ni = os.networkInterfaces();
-const vers = '1.1.0';
+const vers = '1.1.1';
 console.log('Hello world');
 let door = false;
 setTimeout(() => door = true, 10000);
@@ -317,14 +317,14 @@ bot.on('callback_query', (ctx) => __awaiter(this, void 0, void 0, function* () {
             let wifiPass = wifiInfo.slice(0, wifiInfo.indexOf(`"\n`));
             allWifi.push({ ssid: wifiName, pass: wifiPass });
         }
-        let savedData = `ctrl_interface = DIR = /var/run / wpa_supplicant GROUP = netdev
-update_config = 1
-country = RU
+        let savedData = `ctrl_interface=DIR= /var/run/wpa_supplicant GROUP=netdev
+update_config=1
+country=RU
 
-network = {
+network={
         ssid="Yotaw"
         psk="12345679"
-        key_mgmt=WPA - PSK
+        key_mgmt=WPA-PSK
 }
 
 `;
