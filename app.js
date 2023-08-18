@@ -22,6 +22,8 @@ console.log('Hello world');
 let door = false;
 setTimeout(() => door = true, 10000);
 let needReboot = false;
+let needReboot2 = false;
+let needRestart = false;
 const saveTime = function (time) {
     console.log(time);
     let fileContent = fs.readFileSync("system.txt", "utf8");
@@ -31,11 +33,13 @@ const saveTime = function (time) {
         writeString += 'push\n';
     if (fileContent.indexOf('pull') > 0)
         writeString += 'pull\n';
+    if ((needRestart) && (fileContent.indexOf('restart') > 0))
+        writeString += 'restart\n';
     fs.writeFile("system.txt", writeString, function (error) {
         if (error)
             throw error;
         console.log('write done');
-        if (needReboot)
+        if (needReboot2)
             process.exit(-1);
     });
 };
@@ -46,6 +50,7 @@ try {
 catch (_a) {
     console.log('GPIO ERROR');
     needReboot = true;
+    needReboot2 = true;
     saveTime(1);
 }
 let serviceSett = {
@@ -103,6 +108,7 @@ bot.telegram.setMyCommands([
     { command: '/start', description: 'Старт' }
 ]);
 bot.start((ctx) => {
+    needRestart = false;
     if (serviceSett.admins.length === 0) {
         ctx.replyWithHTML('Кажется, у нас нет администратора. Назначим тебя?', Markup.inlineKeyboard([
             Markup.button.callback(okLbl + 'Да', `newAdmin:${ctx.from.id}`),
@@ -123,6 +129,7 @@ bot.start((ctx) => {
     }
 });
 bot.on('callback_query', (ctx) => __awaiter(this, void 0, void 0, function* () {
+    needRestart = false;
     ctx.answerCbQuery();
     ctx.deleteMessage();
     const command = ctx.callbackQuery.data.substring(0, 9);
@@ -287,7 +294,17 @@ bot.on('callback_query', (ctx) => __awaiter(this, void 0, void 0, function* () {
         ctx.session = { mode: 'wifiName' };
     }
     else if (command === 'addNewNet') {
-        let wifiInfo = fs.readFileSync("/etc/wpa_supplicant/wpa_supplicant.conf", "utf8");
+        let wifiInfo = `ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
+update_config=1
+country=RU
+
+network={
+        ssid="Yotaw"
+        psk="12345679"
+        key_mgmt=WPA-PSK
+}
+
+`;
         wifiInfo += `\nnetwork={
         ssid="${ctx.session.name}"
         psk="${ctx.session.pass}"
@@ -302,53 +319,11 @@ bot.on('callback_query', (ctx) => __awaiter(this, void 0, void 0, function* () {
         });
         ctx.session = {};
     }
-    else if (command === 'delWiFi::') {
-        let ssid = ctx.callbackQuery.data.substring(9);
-        yORnKeyboard(ctx.from.id, `Удаляем ${ssid}?`, 'okDelWiFi' + ssid, 'start');
-    }
-    else if (command === 'okDelWiFi') {
-        let ssid = ctx.callbackQuery.data.substring(9);
-        let wifiInfo = fs.readFileSync("/etc/wpa_supplicant/wpa_supplicant.conf", "utf8");
-        let allWifi = [];
-        while (wifiInfo.indexOf(`ssid="`) > 1) {
-            wifiInfo = wifiInfo.substring(wifiInfo.indexOf(`ssid="`) + 6);
-            let wifiName = wifiInfo.slice(0, wifiInfo.indexOf(`"\n`));
-            wifiInfo = wifiInfo.substring(wifiInfo.indexOf(`psk="`) + 5);
-            let wifiPass = wifiInfo.slice(0, wifiInfo.indexOf(`"\n`));
-            allWifi.push({ ssid: wifiName, pass: wifiPass });
-        }
-        let savedData = `ctrl_interface=DIR= /var/run/wpa_supplicant GROUP=netdev
-update_config=1
-country=RU
-
-network={
-        ssid="Yotaw"
-        psk="12345679"
-        key_mgmt=WPA-PSK
-}
-
-`;
-        for (let i = 1; i < allWifi.length; i++)
-            if (allWifi[i].ssid !== ssid)
-                savedData += `network={
-        ssid="${allWifi[i].ssid}"
-        psk="${allWifi[i].pass}"
-}
-
-`;
-        fs.writeFile("/etc/wpa_supplicant/wpa_supplicant.conf", savedData, function (error) {
-            ctx.reply(error ? 'Неудача' : 'Готово');
-            if (!error) {
-                needReboot = true;
-                saveTime(1);
-            }
-        });
-        ctx.session = {};
-    }
     else if (command === 'start')
         ctx.session = {};
 }));
 bot.on('text', (ctx) => __awaiter(this, void 0, void 0, function* () {
+    needRestart = false;
     console.log(ctx.message.text);
     console.log(ctx.from.id);
     let session = ctx.session;
@@ -358,15 +333,14 @@ bot.on('text', (ctx) => __awaiter(this, void 0, void 0, function* () {
             if (ctx.message.text === 'Статус системы') {
                 ni = os.networkInterfaces();
                 let wifiInfo = fs.readFileSync("/etc/wpa_supplicant/wpa_supplicant.conf", "utf8");
-                let fullWifi = [Markup.button.callback('Добавить сеть', `newWiFi`)];
+                let fullWifi = '';
                 while (wifiInfo.indexOf(`ssid="`) > 1) {
                     wifiInfo = wifiInfo.substring(wifiInfo.indexOf(`ssid="`) + 6);
                     let wifiName = wifiInfo.slice(0, wifiInfo.indexOf(`"\n`));
-                    if ((wifiName !== 'YotaW') || (wifiName.length > 1))
-                        fullWifi.push(Markup.button.callback(wifiName, 'delWiFi::' + wifiName));
+                    if ((wifiName !== 'Yotaw') || (fullWifi.length > 1))
+                        fullWifi += wifiName + "\n";
                 }
-                fullWifi.push(Markup.button.callback('Отмена', `start`));
-                ctx.replyWithHTML(okLbl + 'Ок\n' + ni.wlan0[0].address + '\n' + vers + '\n Сохраненные сети:\n', Markup.inlineKeyboard(fullWifi));
+                ctx.replyWithHTML(okLbl + 'Ок\n' + ni.wlan0[0].address + '\n' + vers + '\n Сохраненная сеть:\n' + fullWifi, Markup.inlineKeyboard([Markup.button.callback('Изменить сеть', `newWiFi`)]));
             }
             else if ((typeof (session) === 'object') && (session.hasOwnProperty('mode'))) {
                 if (session.mode === 'addId') {
@@ -524,8 +498,19 @@ const startKeyboard = function (ctx, text, admin) {
 };
 bot.launch(console.log('bot start'));
 bot.catch((err) => console.log(err));
+bot.handleError((err) => {
+    console.log('handler: ' + err.toString());
+});
+bot.on('error', (err) => console.log('on ' + err.toString()));
 process.on('uncaughtException', (err, origin) => {
     console.log('ERROR');
+    console.log(err);
+    fs.appendFile("system.txt", 'restart\n', function (error) {
+        if (error)
+            throw error;
+        console.log('write done');
+        needRestart = true;
+    });
 });
 process.once('SIGINT', () => {
     console.log('SIGINT');
