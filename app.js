@@ -17,13 +17,14 @@ const Gpio = require('pigpio').Gpio;
 const os = require('os');
 const fs = require("fs");
 let ni = os.networkInterfaces();
-const vers = '1.1.1';
+const vers = '1.1.2';
 console.log('Hello world');
 let door = false;
 setTimeout(() => door = true, 10000);
 let needReboot = false;
 let needReboot2 = false;
 let needRestart = false;
+const rebootDate = (new Date()).toLocaleString();
 const saveTime = function (time) {
     console.log(time);
     let fileContent = fs.readFileSync("system.txt", "utf8");
@@ -340,7 +341,7 @@ bot.on('text', (ctx) => __awaiter(this, void 0, void 0, function* () {
                     if ((wifiName !== 'Yotaw') || (fullWifi.length > 1))
                         fullWifi += wifiName + "\n";
                 }
-                ctx.replyWithHTML(okLbl + 'Ок\n' + ni.wlan0[0].address + '\n' + vers + '\n Сохраненная сеть:\n' + fullWifi, Markup.inlineKeyboard([Markup.button.callback('Изменить сеть', `newWiFi`)]));
+                ctx.replyWithHTML(okLbl + 'Ок\n\nupTime from:\n' + rebootDate + ni.wlan0[0].address + '\n' + vers + '\n Сохраненная сеть:\n' + fullWifi, Markup.inlineKeyboard([Markup.button.callback('Изменить сеть', `newWiFi`)]));
             }
             else if ((typeof (session) === 'object') && (session.hasOwnProperty('mode'))) {
                 if (session.mode === 'addId') {
