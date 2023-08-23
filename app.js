@@ -341,7 +341,7 @@ bot.on('text', (ctx) => __awaiter(this, void 0, void 0, function* () {
                     if ((wifiName !== 'Yotaw') || (fullWifi.length > 1))
                         fullWifi += wifiName + "\n";
                 }
-                ctx.replyWithHTML(okLbl + 'Ок\n\nupTime from:\n' + rebootDate + ni.wlan0[0].address + '\n' + vers + '\n Сохраненная сеть:\n' + fullWifi, Markup.inlineKeyboard([Markup.button.callback('Изменить сеть', `newWiFi`)]));
+                ctx.replyWithHTML(okLbl + 'Ок\n\nupTime from:\n' + rebootDate + '\n' + ni.wlan0[0].address + '\n' + vers + '\n Сохраненная сеть:\n' + fullWifi, Markup.inlineKeyboard([Markup.button.callback('Изменить сеть', `newWiFi`)]));
             }
             else if ((typeof (session) === 'object') && (session.hasOwnProperty('mode'))) {
                 if (session.mode === 'addId') {
