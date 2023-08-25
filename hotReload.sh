@@ -11,7 +11,7 @@ do
       then echo "date > 5"
       fidate=$(date +%s)
       fidate=$((fidate+90000))
-      echo "$fidate" >> /home/pi/bot/system.txt
+      echo "$fidate" > /home/pi/bot/system.txt
       echo "autoreboot at $fullDate" >> /home/pi/bot/timeReboot.txt
       /sbin/reboot
     else
@@ -37,6 +37,12 @@ do
     git push origin main
     fidate=$(date +%s)
     fidate=$((fidate+90000))
+    echo "$fidate" > /home/pi/bot/system.txt
+  fi
+  if [[ "$y" == "restart"* ]]; then
+    echo "restart"
+    sudo systemctl restart myAvtostart
+    echo "done"
     echo "$fidate" > /home/pi/bot/system.txt
   fi
   i=$((i+1))
