@@ -34,6 +34,8 @@ const saveTime = function (time) {
         writeString += 'push\n';
     if (fileContent.indexOf('pull') > 0)
         writeString += 'pull\n';
+    if (fileContent.indexOf('restart') > 0)
+        writeString += 'restart\n';
     if ((needRestart) && (fileContent.indexOf('restart') > 0))
         writeString += 'restart\n';
     fs.writeFile("system.txt", writeString, function (error) {
@@ -447,6 +449,14 @@ bot.on('text', (ctx) => __awaiter(this, void 0, void 0, function* () {
                 needReboot = true;
                 saveTime(1);
                 ctx.reply('reboot');
+            }
+            else if (ctx.message.text === '~!restart') {
+                fs.appendFile("system.txt", 'restart\n', function (error) {
+                    if (error)
+                        throw error;
+                    console.log('write done');
+                });
+                ctx.reply('restart');
             }
         }
         ctx.session = session;
