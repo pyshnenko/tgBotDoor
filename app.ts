@@ -8,7 +8,7 @@ const Gpio = require('pigpio').Gpio;
 const os = require('os');
 const fs = require("fs");
 let ni = os.networkInterfaces();
-const vers = '1.1.1';
+const vers = '1.2.2';
 
 console.log('Hello world');
 
@@ -119,6 +119,17 @@ bot.telegram.setMyCommands([
 ])
 
 bot.start((ctx) => {
+    //console.log(askName(ctx.from.id));
+    const name = askName(ctx.from.id);
+    if ((name !== null) || (name === 'undefined')) {
+        for (let i = 0; i<serviceSett.usersData.length; i++) {
+            if (serviceSett.usersData[i].id === ctx.from.id) {
+                serviceSett.usersData[i].name = ctx.from.first_name || ctx.from.last_name || ctx.from.username || 'пользователь';
+                saveData();
+                break;
+            }
+        }
+    }
     needRestart = false;
     if (serviceSett.admins.length === 0) {
         ctx.replyWithHTML('Кажется, у нас нет администратора. Назначим тебя?',
@@ -130,7 +141,7 @@ bot.start((ctx) => {
     else if (serviceSett.admins.includes(ctx.from.id)) {
         startKeyboard(ctx, `Привет, ${ctx.from.first_name || ctx.from.last_name || ctx.from.username || 'пользователь'}`, true);
     }
-    else if (serviceSett.notAdmins.includes(ctx.from.if)) {
+    else if (serviceSett.notAdmins.includes(ctx.from.id)) {
         startKeyboard(ctx, `Привет, ${ctx.from.first_name || ctx.from.last_name || ctx.from.username || 'пользователь'}`, false);
     }
     else {
@@ -151,24 +162,32 @@ bot.on('callback_query', async (ctx) => {
     console.log(command);
     console.log(id);
     if (command === 'newAdmin:') {
-        if (serviceSett.admins.includes(id)) ctx.reply('Уже добавлен');
+        console.log(serviceSett);
+        if (serviceSett.admins.includes(id)) {
+            ctx.reply('Уже добавлен');
+            if (serviceSett.reqUsers.includes(id)) serviceSett.reqUsers.splice(serviceSett.reqUsers.indexOf(id), 1);
+            saveData();
+        }
         else {
             serviceSett.admins.push(id);
             if (id === ctx.from.id) serviceSett.usersData.push({
                 id: ctx.from.id,
                 name: ctx.from.first_name || ctx.from.last_name || ctx.from.username || 'пользователь',
                 comment: ''
-            })
+            })            
+            if (serviceSett.reqUsers.includes(id)) serviceSett.reqUsers.splice(serviceSett.reqUsers.indexOf(id), 1);
             saveData();
             for (let i = 0; i < serviceSett.admins.length; i++) {
                 if (serviceSett.admins[i] !== id)
                     bot.telegram.sendMessage(serviceSett.admins[i], `Пользователь ${ctx.from.first_name || ctx.from.last_name || ctx.from.username || 'Без имени'} id: ${ctx.from.id} добавлен в группу "Администраторы"`);
             }
             if (ctx.from.id === id) startKeyboard(ctx, 'Добро пожаловать', true);
+            else 
+                bot.telegram.sendMessage(id, 'Вас добавили как администратора. Нажмите /start');
         }
     }
     else if (command === 'newAdmAsk') {
-        ctx.replay(`Пользователю ${id} направлено приглашение`);
+        ctx.reply(`Пользователю ${id} направлено приглашение`);
         yORnKeyboard(id, 'Приветствую. Принять приглашение на подключение к воротам?', `addAdmAsk${ctx.from.id}`, 'start');
     }
     else if (command === 'addAdmAsk') {
@@ -239,11 +258,18 @@ bot.on('callback_query', async (ctx) => {
         }
     }
     else if (command === 'addUser::') {
-        for (let i = 0; i < serviceSett.admins.length; i++) { bot.telegram.sendMessage(serviceSett.admins[i], `Пользователь ${ctx.from.first_name || ctx.from.last_name || ctx.from.username || 'Без имени'} id: ${ctx.from.id} добавлен`); }
-        if (!serviceSett.notAdmins.includes(id))
-            serviceSett.notAdmins.push(id);
-        if (serviceSett.reqUsers.includes(id))
-            serviceSett.reqUsers.splice(serviceSett.reqUsers.indexOf(id), 1);
+        if (serviceSett.notAdmins.includes(id)) {
+            ctx.reply('Уже добавлено');
+        }
+        else {
+            for (let i = 0; i < serviceSett.admins.length; i++) { bot.telegram.sendMessage(serviceSett.admins[i], `Пользователь ${ctx.from.first_name || ctx.from.last_name || ctx.from.username || 'Без имени'} id: ${ctx.from.id} добавлен`); }
+            if (!serviceSett.notAdmins.includes(id))
+                serviceSett.notAdmins.push(id);
+            if (serviceSett.reqUsers.includes(id))
+                serviceSett.reqUsers.splice(serviceSett.reqUsers.indexOf(id), 1);
+            bot.telegram.sendMessage(id, 'Вас добавили как пользовтеля. Нажмите /start');
+        }
+        if (serviceSett.reqUsers.includes(id)) serviceSett.reqUsers.splice(serviceSett.reqUsers.indexOf(id), 1);
         saveData();
     }
     else if (command === 'notAddUs:') {
@@ -288,6 +314,7 @@ bot.on('callback_query', async (ctx) => {
             }
         }
         saveData();
+        bot.telegram.sendMessage(id, 'Вас удалили', Markup.removeKeyboard(true));
     }
     else if (command === 'newWiFi') {
         ctx.reply('Введи название новой сети');
@@ -350,7 +377,7 @@ bot.on('text', async (ctx) => {
                         ]))
                     }
                     else {
-                        ctx.replay('Некорректный id');
+                        ctx.reply('Некорректный id');
                     }
                     session = {};
                 }
@@ -460,6 +487,7 @@ const askName = function (id: number) {
             return serviceSett.usersData[i].name;
         }
     }
+    return null
 }
 
 const saveData = async function () {
@@ -476,6 +504,7 @@ const yORnKeyboard = function (id: number, text: string, okCallb?:string, nOkCal
     ]))
 }
 const startKeyboard = async function (ctx: any, text: string, admin: boolean) {
+    console.log(admin);
     const admKeyboard = Markup.keyboard([
         ['Запросы', 'Пользователи'],
         ['Добавить по id', 'Удалить пользователя'],

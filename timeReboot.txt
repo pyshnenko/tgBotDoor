@@ -2,3 +2,13 @@ autoreboot at Вт 15 авг 2023 15:55:46 MSK
 autoreboot at Вт 15 авг 2023 15:55:54 MSK
 autoreboot at Чт 17 авг 2023 11:45:01 MSK
 autoreboot at Пт 18 авг 2023 15:10:01 MSK
+autoreboot at Сб 02 сен 2023 08:40:01 MSK
+autoreboot at Сб 02 сен 2023 14:50:01 MSK
+autoreboot at Сб 02 сен 2023 20:15:01 MSK
+autoreboot at Пн 04 сен 2023 21:00:01 MSK
+autoreboot at Ср 06 сен 2023 15:30:01 MSK
+autoreboot at Сб 16 сен 2023 16:00:01 MSK
+autoreboot at Сб 16 сен 2023 16:35:01 MSK
+autoreboot at Сб 16 сен 2023 16:40:01 MSK
+autoreboot at Сб 16 сен 2023 16:50:01 MSK
+autoreboot at Сб 16 сен 2023 18:30:01 MSK
