@@ -12,3 +12,6 @@ autoreboot at Сб 16 сен 2023 16:35:01 MSK
 autoreboot at Сб 16 сен 2023 16:40:01 MSK
 autoreboot at Сб 16 сен 2023 16:50:01 MSK
 autoreboot at Сб 16 сен 2023 18:30:01 MSK
+autoreboot at Вс 17 сен 2023 10:25:54 MSK
+autoreboot at Вс 17 сен 2023 20:00:02 MSK
+autoreboot at Вт 19 сен 2023 20:35:01 MSK

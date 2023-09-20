@@ -84,7 +84,7 @@ var saveTime = function (time) {
 };
 var LEDdoor;
 try {
-    LEDdoor = new Gpio(17, { mode: Gpio.OUTPUT });
+    LEDdoor = new Gpio(27, { mode: Gpio.OUTPUT });
 }
 catch (_b) {
     console.log('GPIO ERROR');

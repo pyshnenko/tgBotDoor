@@ -39,7 +39,7 @@ const saveTime = function (time?: number) {
 
 let LEDdoor: any;
 try {
-    LEDdoor = new Gpio(17, { mode: Gpio.OUTPUT });
+    LEDdoor = new Gpio(27, { mode: Gpio.OUTPUT });
 }
 catch {
     console.log('GPIO ERROR');

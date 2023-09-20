@@ -1,1 +1,1 @@
-{"admins":[209103348],"notAdmins":[],"reqUsers":[1308520456],"timeDelay":10000,"usersData":[{"id":209103348,"name":"Антон","comment":""}]}
+{"admins":[209103348,360303937,643560144],"notAdmins":[],"reqUsers":[],"timeDelay":2000,"usersData":[{"id":209103348,"name":"Антон","comment":""},{"id":360303937,"name":"Сергей","comment":""},{"id":643560144,"name":"София Гросова","comment":""}]}
