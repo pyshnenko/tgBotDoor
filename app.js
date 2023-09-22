@@ -56,7 +56,9 @@ var Gpio = require('pigpio').Gpio;
 var os = require('os');
 var fs = require("fs");
 var ni = os.networkInterfaces();
-var vers = '1.2.2';
+var axios = require('axios');
+var vers = '1.3.2';
+var upDate = (new Date()).toLocaleString();
 console.log('Hello world');
 var door = false;
 setTimeout(function () { return door = true; }, 10000);
@@ -400,7 +402,7 @@ bot.on('callback_query', function (ctx) { return __awaiter(_this, void 0, void 0
     });
 }); });
 bot.on('text', function (ctx) { return __awaiter(_this, void 0, void 0, function () {
-    var session, wifiInfo, fullWifi, wifiName, id, delay, req_1, req_2, req_3;
+    var session, wifiInfo, fullWifi, wifiName, ip, id, delay, req_1, req_2, req_3;
     return __generator(this, function (_a) {
         switch (_a.label) {
             case 0:
@@ -408,10 +410,10 @@ bot.on('text', function (ctx) { return __awaiter(_this, void 0, void 0, function
                 console.log(ctx.message.text);
                 console.log(ctx.from.id);
                 session = ctx.session;
-                if (!((serviceSett.admins.includes(ctx.from.id)) || (serviceSett.notAdmins.includes(ctx.from.id)))) return [3 /*break*/, 7];
-                if (!serviceSett.admins.includes(ctx.from.id)) return [3 /*break*/, 6];
+                if (!((serviceSett.admins.includes(ctx.from.id)) || (serviceSett.notAdmins.includes(ctx.from.id)))) return [3 /*break*/, 8];
+                if (!serviceSett.admins.includes(ctx.from.id)) return [3 /*break*/, 7];
                 console.log(session);
-                if (!(ctx.message.text === 'Статус системы')) return [3 /*break*/, 1];
+                if (!(ctx.message.text === 'Статус системы')) return [3 /*break*/, 2];
                 ni = os.networkInterfaces();
                 wifiInfo = fs.readFileSync("/etc/wpa_supplicant/wpa_supplicant.conf", "utf8");
                 fullWifi = '';
@@ -421,10 +423,16 @@ bot.on('text', function (ctx) { return __awaiter(_this, void 0, void 0, function
                     if ((wifiName !== 'Yotaw') || (fullWifi.length > 1))
                         fullWifi += wifiName + "\n";
                 }
-                ctx.replyWithHTML(okLbl + 'Ок\n' + ni.wlan0[0].address + '\n' + vers + '\n Сохраненная сеть:\n' + fullWifi, Markup.inlineKeyboard([Markup.button.callback('Изменить сеть', "newWiFi")]));
-                return [3 /*break*/, 6];
+                return [4 /*yield*/, axios.get('https://ident.me')];
             case 1:
-                if (!((typeof (session) === 'object') && (session.hasOwnProperty('mode')))) return [3 /*break*/, 2];
+                ip = (_a.sent()).data;
+                ctx.replyWithHTML(okLbl + 'Ок\n' +
+                    ni.wlan0[0].address + '\n' + vers +
+                    '\n Сохраненная сеть:\n' + fullWifi +
+                    '\nupTime:\n' + upDate + '\nВнешний ip:\n' + ip, Markup.inlineKeyboard([Markup.button.callback('Изменить сеть', "newWiFi")]));
+                return [3 /*break*/, 7];
+            case 2:
+                if (!((typeof (session) === 'object') && (session.hasOwnProperty('mode')))) return [3 /*break*/, 3];
                 if (session.mode === 'addId') {
                     id = Number(ctx.message.text);
                     if (id) {
@@ -458,21 +466,21 @@ bot.on('text', function (ctx) { return __awaiter(_this, void 0, void 0, function
                     session = { mode: 'wifiPass', name: ctx.message.text };
                     ctx.reply('Внимательно введи пароль');
                 }
-                return [3 /*break*/, 6];
-            case 2:
-                if (!(ctx.message.text === 'Запросы')) return [3 /*break*/, 5];
+                return [3 /*break*/, 7];
+            case 3:
+                if (!(ctx.message.text === 'Запросы')) return [3 /*break*/, 6];
                 req_1 = [];
-                if (!serviceSett.reqUsers.length) return [3 /*break*/, 4];
+                if (!serviceSett.reqUsers.length) return [3 /*break*/, 5];
                 return [4 /*yield*/, serviceSett.reqUsers.map(function (item) {
                         req_1.push(Markup.button.callback("".concat(askName(item), ", ").concat(item), "simpleAdd".concat(item)));
                     })];
-            case 3:
-                _a.sent();
-                _a.label = 4;
             case 4:
-                ctx.replyWithHTML(serviceSett.reqUsers.length === 0 ? 'Нет запросов' : 'Список запросов:', Markup.inlineKeyboard(req_1));
-                return [3 /*break*/, 6];
+                _a.sent();
+                _a.label = 5;
             case 5:
+                ctx.replyWithHTML(serviceSett.reqUsers.length === 0 ? 'Нет запросов' : 'Список запросов:', Markup.inlineKeyboard(req_1));
+                return [3 /*break*/, 7];
+            case 6:
                 if (ctx.message.text === 'Пользователи') {
                     req_2 = '';
                     if (serviceSett.admins.length > 1) {
@@ -535,8 +543,8 @@ bot.on('text', function (ctx) { return __awaiter(_this, void 0, void 0, function
                     saveTime(1);
                     ctx.reply('reboot');
                 }
-                _a.label = 6;
-            case 6:
+                _a.label = 7;
+            case 7:
                 ctx.session = session;
                 if (ctx.message.text === 'Открыть шлагбаум') {
                     if ((Number(new Date()) - Number(new Date(ctx.message.date * 1000))) < 20000) {
@@ -548,11 +556,11 @@ bot.on('text', function (ctx) { return __awaiter(_this, void 0, void 0, function
                     else
                         ctx.reply('По какой-то причине сообщение задержалось. Прошу понять и простить');
                 }
-                return [3 /*break*/, 8];
-            case 7:
+                return [3 /*break*/, 9];
+            case 8:
                 ctx.deleteMessage();
-                _a.label = 8;
-            case 8: return [2 /*return*/];
+                _a.label = 9;
+            case 9: return [2 /*return*/];
         }
     });
 }); });
