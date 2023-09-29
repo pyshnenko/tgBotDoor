@@ -84,9 +84,11 @@ var saveTime = function (time) {
             process.exit(-1);
     });
 };
-var LEDdoor;
+var LEDdoorOp;
+var LEDdoorCl;
 try {
-    LEDdoor = new Gpio(27, { mode: Gpio.OUTPUT });
+    LEDdoorOp = new Gpio(27, { mode: Gpio.OUTPUT });
+    LEDdoorCl = new Gpio(22, { mode: Gpio.OUTPUT });
 }
 catch (_b) {
     console.log('GPIO ERROR');
@@ -413,7 +415,7 @@ bot.on('text', function (ctx) { return __awaiter(_this, void 0, void 0, function
                 if (!((serviceSett.admins.includes(ctx.from.id)) || (serviceSett.notAdmins.includes(ctx.from.id)))) return [3 /*break*/, 8];
                 if (!serviceSett.admins.includes(ctx.from.id)) return [3 /*break*/, 7];
                 console.log(session);
-                if (!(ctx.message.text === 'Статус системы')) return [3 /*break*/, 2];
+                if (!(ctx.message.text === 'Статус')) return [3 /*break*/, 2];
                 ni = os.networkInterfaces();
                 wifiInfo = fs.readFileSync("/etc/wpa_supplicant/wpa_supplicant.conf", "utf8");
                 fullWifi = '';
@@ -546,12 +548,22 @@ bot.on('text', function (ctx) { return __awaiter(_this, void 0, void 0, function
                 _a.label = 7;
             case 7:
                 ctx.session = session;
-                if (ctx.message.text === 'Открыть шлагбаум') {
+                if (ctx.message.text === 'Открыть ворота') {
                     if ((Number(new Date()) - Number(new Date(ctx.message.date * 1000))) < 20000) {
                         ctx.reply(door ? 'Открываю' : 'Подождите немного');
-                        LEDdoor.digitalWrite(door);
+                        LEDdoorOp.digitalWrite(door);
                         door = false;
-                        setTimeout(function () { door = true; LEDdoor.digitalWrite(false); }, serviceSett.timeDelay);
+                        setTimeout(function () { door = true; LEDdoorOp.digitalWrite(false); }, serviceSett.timeDelay);
+                    }
+                    else
+                        ctx.reply('По какой-то причине сообщение задержалось. Прошу понять и простить');
+                }
+                if (ctx.message.text === 'Закрыть ворота') {
+                    if ((Number(new Date()) - Number(new Date(ctx.message.date * 1000))) < 20000) {
+                        ctx.reply(door ? 'Закрываю' : 'Подождите немного');
+                        LEDdoorCl.digitalWrite(door);
+                        door = false;
+                        setTimeout(function () { door = true; LEDdoorCl.digitalWrite(false); }, serviceSett.timeDelay);
                     }
                     else
                         ctx.reply('По какой-то причине сообщение задержалось. Прошу понять и простить');
@@ -596,13 +608,14 @@ var startKeyboard = function (ctx, text, admin) {
         return __generator(this, function (_a) {
             console.log(admin);
             admKeyboard = Markup.keyboard([
-                ['Запросы', 'Пользователи'],
+                ['Запросы', 'Пользователи', 'Статус'],
                 ['Добавить по id', 'Удалить пользователя'],
-                ['Статус системы', 'Длительность нажатия'],
-                ['Открыть шлагбаум']
+                ['Открыть ворота'],
+                ['Закрыть ворота'],
             ]);
-            notAdminKeyboard = Markup.keyboard([['Открыть шлагбаум']]);
-            ctx.replyWithHTML(text || 'Вот кнопка для шлагбаума\n', admin ? admKeyboard : notAdminKeyboard);
+            notAdminKeyboard = Markup.keyboard([['Открыть ворота'],
+                ['Закрыть ворота']]);
+            ctx.replyWithHTML(text || 'Вот кнопка для воротаа\n', admin ? admKeyboard : notAdminKeyboard);
             return [2 /*return*/];
         });
     });

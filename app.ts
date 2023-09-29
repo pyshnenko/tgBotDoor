@@ -40,9 +40,12 @@ const saveTime = function (time?: number) {
     });
 }
 
-let LEDdoor: any;
+let LEDdoorOp: any;
+let LEDdoorCl: any;
+
 try {
-    LEDdoor = new Gpio(27, { mode: Gpio.OUTPUT });
+    LEDdoorOp = new Gpio(27, { mode: Gpio.OUTPUT });
+    LEDdoorCl = new Gpio(22, { mode: Gpio.OUTPUT });
 }
 catch {
     console.log('GPIO ERROR');
@@ -357,7 +360,7 @@ bot.on('text', async (ctx) => {
     if ((serviceSett.admins.includes(ctx.from.id)) || (serviceSett.notAdmins.includes(ctx.from.id))) {
         if (serviceSett.admins.includes(ctx.from.id)) {
             console.log(session);
-            if (ctx.message.text === 'Статус системы') {
+            if (ctx.message.text === 'Статус') {
                 ni = os.networkInterfaces();
                 let wifiInfo = fs.readFileSync("/etc/wpa_supplicant/wpa_supplicant.conf", "utf8");
                 let fullWifi: string = '';
@@ -476,12 +479,21 @@ bot.on('text', async (ctx) => {
             }
         }
         ctx.session = session;
-        if (ctx.message.text === 'Открыть шлагбаум') {
+        if (ctx.message.text === 'Открыть ворота') {
             if ((Number(new Date()) - Number(new Date(ctx.message.date * 1000))) < 20000) {
                 ctx.reply(door ? 'Открываю' : 'Подождите немного');
-                LEDdoor.digitalWrite(door);
+                LEDdoorOp.digitalWrite(door);
                 door = false;
-                setTimeout(() => { door = true; LEDdoor.digitalWrite(false) }, serviceSett.timeDelay);
+                setTimeout(() => { door = true; LEDdoorOp.digitalWrite(false) }, serviceSett.timeDelay);
+            }
+            else ctx.reply('По какой-то причине сообщение задержалось. Прошу понять и простить');
+        }
+        if (ctx.message.text === 'Закрыть ворота') {
+            if ((Number(new Date()) - Number(new Date(ctx.message.date * 1000))) < 20000) {
+                ctx.reply(door ? 'Закрываю' : 'Подождите немного');
+                LEDdoorCl.digitalWrite(door);
+                door = false;
+                setTimeout(() => { door = true; LEDdoorCl.digitalWrite(false) }, serviceSett.timeDelay);
             }
             else ctx.reply('По какой-то причине сообщение задержалось. Прошу понять и простить');
         }
@@ -514,14 +526,15 @@ const yORnKeyboard = function (id: number, text: string, okCallb?:string, nOkCal
 const startKeyboard = async function (ctx: any, text: string, admin: boolean) {
     console.log(admin);
     const admKeyboard = Markup.keyboard([
-        ['Запросы', 'Пользователи'],
+        ['Запросы', 'Пользователи', 'Статус'],
         ['Добавить по id', 'Удалить пользователя'],
-        ['Статус системы', 'Длительность нажатия'],
-        ['Открыть шлагбаум']
+        ['Открыть ворота'],
+        ['Закрыть ворота'],
     ]);
-    const notAdminKeyboard = Markup.keyboard([['Открыть шлагбаум']]);
+    const notAdminKeyboard = Markup.keyboard([['Открыть ворота'],
+    ['Закрыть ворота']]);
     ctx.replyWithHTML(
-        text || 'Вот кнопка для шлагбаума\n',
+        text || 'Вот кнопка для воротаа\n',
         admin ? admKeyboard : notAdminKeyboard)
 }
 
