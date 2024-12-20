@@ -57,7 +57,7 @@ var os = require('os');
 var fs = require("fs");
 var ni = os.networkInterfaces();
 var axios = require('axios');
-var vers = '1.3.2';
+var vers = '1.3.3';
 var upDate = (new Date()).toLocaleString();
 console.log('Hello world');
 var door = false;
