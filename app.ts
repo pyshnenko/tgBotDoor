@@ -10,7 +10,7 @@ const fs = require("fs");
 let ni = os.networkInterfaces();
 const axios = require('axios');
 
-const vers = '1.3.2';
+const vers = '1.3.3';
 
 const upDate = (new Date()).toLocaleString();
 
