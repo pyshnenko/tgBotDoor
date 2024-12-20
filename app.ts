@@ -4,7 +4,7 @@ const botToken = process.env.TGBOT;
 const bot = new Telegraf(botToken);
 const { session } = require('telegraf');
 const { Extra, Markup } = require('telegraf');
-//const Gpio = require('pigpio').Gpio;
+const Gpio = require('pigpio').Gpio;
 const os = require('os');
 const fs = require("fs");
 let ni = os.networkInterfaces();
@@ -45,8 +45,8 @@ let LEDdoorOp: any;
 let LEDdoorCl: any;
 
 try {
-    //LEDdoorOp = new Gpio(27, { mode: Gpio.OUTPUT });
-    //LEDdoorCl = new Gpio(22, { mode: Gpio.OUTPUT });
+    LEDdoorOp = new Gpio(27, { mode: Gpio.OUTPUT });
+    LEDdoorCl = new Gpio(22, { mode: Gpio.OUTPUT });
 }
 catch {
     console.log('GPIO ERROR');
