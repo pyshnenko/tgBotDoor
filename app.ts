@@ -4,13 +4,14 @@ const botToken = process.env.TGBOT;
 const bot = new Telegraf(botToken);
 const { session } = require('telegraf');
 const { Extra, Markup } = require('telegraf');
-const Gpio = require('pigpio').Gpio;
+//const Gpio = require('pigpio').Gpio;
 const os = require('os');
 const fs = require("fs");
 let ni = os.networkInterfaces();
 const axios = require('axios');
+import bash from './src/scripts/bash';
 
-const vers = '1.3.3';
+const vers = '1.4.2';
 
 const upDate = (new Date()).toLocaleString();
 
@@ -44,8 +45,8 @@ let LEDdoorOp: any;
 let LEDdoorCl: any;
 
 try {
-    LEDdoorOp = new Gpio(27, { mode: Gpio.OUTPUT });
-    LEDdoorCl = new Gpio(22, { mode: Gpio.OUTPUT });
+    //LEDdoorOp = new Gpio(27, { mode: Gpio.OUTPUT });
+    //LEDdoorCl = new Gpio(22, { mode: Gpio.OUTPUT });
 }
 catch {
     console.log('GPIO ERROR');
@@ -185,7 +186,7 @@ bot.on('callback_query', async (ctx) => {
             saveData();
             for (let i = 0; i < serviceSett.admins.length; i++) {
                 if (serviceSett.admins[i] !== id)
-                    bot.telegram.sendMessage(serviceSett.admins[i], `Пользователь ${ctx.from.first_name || ctx.from.last_name || ctx.from.username || 'Без имени'} id: ${ctx.from.id} добавлен в группу "Администраторы"`);
+                    bot.telegram.sendMessage(serviceSett.admins[i], `Пользователь ${askName(id)} id: ${id} добавлен в группу "Администраторы"`);
             }
             if (ctx.from.id === id) startKeyboard(ctx, 'Добро пожаловать', true);
             else 
@@ -214,14 +215,14 @@ bot.on('callback_query', async (ctx) => {
         if (serviceSett.reqUsers.includes(id)) ctx.reply('Ожидайте решение администратора');
         else {
             await ctx.reply('Мы отправили запрос администраторам. Ожидайте');
-            for (let i = 0; i < serviceSett.admins.length; i++) {
+            /*for (let i = 0; i < serviceSett.admins.length; i++) {
                 await bot.telegram.sendMessage(serviceSett.admins[i], `Пользователь ${ctx.from.first_name || ctx.from.last_name || ctx.from.username || 'Без имени'} id: ${ctx.from.id} просится к нам. Добавим?`,
                     Markup.inlineKeyboard([
                         Markup.button.callback('Сделать администратором', `newAdmin:${ctx.from.id}`),
                         Markup.button.callback('Добавить', `addUser::${ctx.from.id}`),
                         Markup.button.callback('Отказать', `notAddUs:${ctx.from.id}`)
                     ]))
-            }
+            }*/
             serviceSett.reqUsers.push(ctx.from.id);
             serviceSett.usersData.push({
                 id: ctx.from.id,
@@ -245,7 +246,7 @@ bot.on('callback_query', async (ctx) => {
                 comment: ''
             })
             saveData();
-            bot.telegram.sendMessage(id, `Пользователь ${askName(id)} добавлен в группу "Администраторы"`);
+            bot.telegram.sendMessage(id, `Пользователь ${askName(id)} id: ${ctx.from.id} добавлен в группу "Администраторы"`);
             if (ctx.from.id === id) startKeyboard(ctx, 'Добро пожаловать', true);
         }
     }
@@ -259,7 +260,7 @@ bot.on('callback_query', async (ctx) => {
                 comment: ''
             })
             saveData();
-            bot.telegram.sendMessage(id, `Пользователь ${askName(id)} добавлен в группу "Пользователи"`);
+            bot.telegram.sendMessage(id, `Пользователь ${askName(id)} id: ${ctx.from.id} добавлен в группу "Пользователи"`);
             if (ctx.from.id === id) startKeyboard(ctx, 'Добро пожаловать', true);
         }
     }
@@ -268,7 +269,7 @@ bot.on('callback_query', async (ctx) => {
             ctx.reply('Уже добавлено');
         }
         else {
-            for (let i = 0; i < serviceSett.admins.length; i++) { bot.telegram.sendMessage(serviceSett.admins[i], `Пользователь ${ctx.from.first_name || ctx.from.last_name || ctx.from.username || 'Без имени'} id: ${ctx.from.id} добавлен`); }
+            for (let i = 0; i < serviceSett.admins.length; i++) { bot.telegram.sendMessage(serviceSett.admins[i], `Пользователь ${askName(id)} id: ${id} добавлен`); }
             if (!serviceSett.notAdmins.includes(id))
                 serviceSett.notAdmins.push(id);
             if (serviceSett.reqUsers.includes(id))
@@ -279,7 +280,7 @@ bot.on('callback_query', async (ctx) => {
         saveData();
     }
     else if (command === 'notAddUs:') {
-        for (let i = 0; i < serviceSett.admins.length; i++) { bot.telegram.sendMessage(serviceSett.admins[i], `Пользователю ${ctx.from.first_name || ctx.from.last_name || ctx.from.username || 'Без имени'} id: ${ctx.from.id} отказано`); }
+        for (let i = 0; i < serviceSett.admins.length; i++) { bot.telegram.sendMessage(serviceSett.admins[i], `Пользователю ${askName(id)} id: ${id} отказано`); }
         if (serviceSett.reqUsers.includes(id))
             serviceSett.reqUsers.splice(serviceSett.reqUsers.indexOf(id), 1);
         for (let i = 0; i < serviceSett.usersData.length; i++) {
@@ -364,25 +365,18 @@ bot.on('text', async (ctx) => {
                 ni = os.networkInterfaces();
                 let wifiInfo = fs.readFileSync("/etc/wpa_supplicant/wpa_supplicant.conf", "utf8");
                 let fullWifi: string = '';
-                let newWiFi = true;
                 while (wifiInfo.indexOf(`ssid="`) > 1) {
                     wifiInfo = wifiInfo.substring(wifiInfo.indexOf(`ssid="`) + 6);
                     let wifiName: string = wifiInfo.slice(0, wifiInfo.indexOf(`"\n`));
-                    if ((wifiName !== 'Yotaw') || (fullWifi.length > 1)) {fullWifi += wifiName + "\n"; newWiFi=false;}
+                    if ((wifiName !== 'Yotaw') || (fullWifi.length > 1)) fullWifi += wifiName + "\n";
                 }
                 const ip = (await axios.get('https://ident.me')).data;
-                if (newWiFi)
                 ctx.replyWithHTML(okLbl + 'Ок\n' + 
                     ni.wlan0[0].address + '\n' + vers + 
                     '\n Сохраненная сеть:\n' + fullWifi + 
                     '\nupTime:\n' + upDate + '\nВнешний ip:\n' + ip, 
                     Markup.inlineKeyboard(
                     [Markup.button.callback('Изменить сеть', `newWiFi`)]));
-                else 
-                ctx.replyWithHTML(okLbl + 'Ок\n' + 
-                    ni.wlan0[0].address + '\n' + vers + 
-                    '\n Сохраненная сеть:\n' + fullWifi + 
-                    '\nupTime:\n' + upDate + '\nВнешний ip:\n' + ip);
             }
             else if ((typeof (session) === 'object') && (session.hasOwnProperty('mode'))) {
                 if (session.mode === 'addId') {
@@ -466,23 +460,35 @@ bot.on('text', async (ctx) => {
                 ctx.reply('Введи значение в милисекундах');
             }
             else if (ctx.message.text === '~!git push') {
-                fs.appendFile("system.txt", 'push\n', function (error) {
+                bash.push(ctx);
+                /*fs.appendFile("system.txt", 'push\n', function (error) {
                     if (error) throw error;
                     console.log('write done');
-                });
+                });*/
                 ctx.reply('push');
             }
             else if (ctx.message.text === '~!git pull') {
-                fs.appendFile("system.txt", 'pull\n', function (error) {
+                bash.pull(ctx);
+                /*fs.appendFile("system.txt", 'pull\n', function (error) {
                     if (error) throw error;
                     console.log('write done');
-                });
+                });*/
                 ctx.reply('pull');
+            }
+            else if (ctx.message.text === '~!restart') {
+                bash.restart(ctx);
+                ctx.reply('reboot');
             }
             else if (ctx.message.text === '~!reboot') {
                 needReboot = true;
                 saveTime(1);
                 ctx.reply('reboot');
+            }
+            else if (ctx.message.text === '~ Параметры ~') {
+                startKeyboardAny(ctx);
+            }
+            else if (ctx.message.text === '~ Назад ~') {
+                startKeyboard(ctx, null, true);
             }
         }
         ctx.session = session;
@@ -533,16 +539,27 @@ const yORnKeyboard = function (id: number, text: string, okCallb?:string, nOkCal
 const startKeyboard = async function (ctx: any, text: string, admin: boolean) {
     console.log(admin);
     const admKeyboard = Markup.keyboard([
-        ['Запросы', 'Пользователи', 'Статус'],
+        /*['Запросы', 'Пользователи', 'Статус'],
         ['Добавить по id', 'Удалить пользователя'],
         ['Открыть ворота'],
-        ['Закрыть ворота'],
+        ['Закрыть ворота'],*/
+        ['Открыть ворота', 'Закрыть ворота'],
+        ['~ Параметры ~']
     ]);
     const notAdminKeyboard = Markup.keyboard([['Открыть ворота'],
     ['Закрыть ворота']]);
     ctx.replyWithHTML(
-        text || 'Вот кнопка для воротаа\n',
+        text || 'Вот кнопка для ворот\n',
         admin ? admKeyboard : notAdminKeyboard)
+}
+const startKeyboardAny = async function (ctx: any) {
+    const admKeyboard = Markup.keyboard([
+        ['Запросы', 'Пользователи', 'Статус'],
+        ['Добавить по id', 'Удалить пользователя'],
+        ['~ назад ~']
+    ]);
+    ctx.replyWithHTML(
+        'Параметры\n',admKeyboard)
 }
 
 bot.launch(console.log('bot start'));
