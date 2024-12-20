@@ -245,7 +245,7 @@ bot.on('callback_query', async (ctx) => {
                 comment: ''
             })
             saveData();
-            bot.telegram.sendMessage(id, `Пользователь ${askName(id)} id: ${ctx.from.id} добавлен в группу "Администраторы"`);
+            bot.telegram.sendMessage(id, `Пользователь ${askName(id)} добавлен в группу "Администраторы"`);
             if (ctx.from.id === id) startKeyboard(ctx, 'Добро пожаловать', true);
         }
     }
@@ -259,7 +259,7 @@ bot.on('callback_query', async (ctx) => {
                 comment: ''
             })
             saveData();
-            bot.telegram.sendMessage(id, `Пользователь ${askName(id)} id: ${ctx.from.id} добавлен в группу "Пользователи"`);
+            bot.telegram.sendMessage(id, `Пользователь ${askName(id)} добавлен в группу "Пользователи"`);
             if (ctx.from.id === id) startKeyboard(ctx, 'Добро пожаловать', true);
         }
     }
@@ -364,18 +364,25 @@ bot.on('text', async (ctx) => {
                 ni = os.networkInterfaces();
                 let wifiInfo = fs.readFileSync("/etc/wpa_supplicant/wpa_supplicant.conf", "utf8");
                 let fullWifi: string = '';
+                let newWiFi = true;
                 while (wifiInfo.indexOf(`ssid="`) > 1) {
                     wifiInfo = wifiInfo.substring(wifiInfo.indexOf(`ssid="`) + 6);
                     let wifiName: string = wifiInfo.slice(0, wifiInfo.indexOf(`"\n`));
-                    if ((wifiName !== 'Yotaw') || (fullWifi.length > 1)) fullWifi += wifiName + "\n";
+                    if ((wifiName !== 'Yotaw') || (fullWifi.length > 1)) {fullWifi += wifiName + "\n"; newWiFi=false;}
                 }
                 const ip = (await axios.get('https://ident.me')).data;
+                if (newWiFi)
                 ctx.replyWithHTML(okLbl + 'Ок\n' + 
                     ni.wlan0[0].address + '\n' + vers + 
                     '\n Сохраненная сеть:\n' + fullWifi + 
                     '\nupTime:\n' + upDate + '\nВнешний ip:\n' + ip, 
                     Markup.inlineKeyboard(
                     [Markup.button.callback('Изменить сеть', `newWiFi`)]));
+                else 
+                ctx.replyWithHTML(okLbl + 'Ок\n' + 
+                    ni.wlan0[0].address + '\n' + vers + 
+                    '\n Сохраненная сеть:\n' + fullWifi + 
+                    '\nupTime:\n' + upDate + '\nВнешний ip:\n' + ip);
             }
             else if ((typeof (session) === 'object') && (session.hasOwnProperty('mode'))) {
                 if (session.mode === 'addId') {
