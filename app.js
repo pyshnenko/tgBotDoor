@@ -633,7 +633,7 @@ var startKeyboardAny = function (ctx) {
             admKeyboard = Markup.keyboard([
                 ['Запросы', 'Пользователи', 'Статус'],
                 ['Добавить по id', 'Удалить пользователя'],
-                ['~ назад ~']
+                ['~ Назад ~']
             ]);
             ctx.replyWithHTML('Параметры\n', admKeyboard);
             return [2 /*return*/];
