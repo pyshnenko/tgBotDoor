@@ -8,12 +8,16 @@ interface Bash {
 }
 
 const pull = (ctx: any) => {
-    exec(`git pull`, (error: any, stdout: any, stderr: any) => {
+    exec(`bash ${__dirname}/pull.sh`, (error: any, stdout: any, stderr: any) => {
         if (error) {
+            ctx.reply(error.message)
+            ctx.reply('error')
             console.log(`error: ${error.message}`);
             return;
         }
         if (stderr) {
+            ctx.reply(stderr)
+            ctx.reply('error')
             console.log(`stderr: ${stderr}`);
             return;
         }
@@ -23,12 +27,16 @@ const pull = (ctx: any) => {
 }
 
 const push = (ctx: any) => {
-    exec(`git add .;git commit -m "$(date)";git push origin main`, (error: any, stdout: any, stderr: any) => {
+    exec(`bash ${__dirname}/push.sh`, (error: any, stdout: any, stderr: any) => {
         if (error) {
+            ctx.reply(error.message)
+            ctx.reply('error')
             console.log(`error: ${error.message}`);
             return;
         }
         if (stderr) {
+            ctx.reply(stderr)
+            ctx.reply('error')
             console.log(`stderr: ${stderr}`);
             return;
         }
@@ -40,10 +48,14 @@ const push = (ctx: any) => {
 const restart = (ctx: any) => {
     exec(`systemctl restart myAvtostart`, (error: any, stdout: any, stderr: any) => {
         if (error) {
+            ctx.reply(error.message)
+            ctx.reply('error')
             console.log(`error: ${error.message}`);
             return;
         }
         if (stderr) {
+            ctx.reply(stderr)
+            ctx.reply('error')
             console.log(`stderr: ${stderr}`);
             return;
         }

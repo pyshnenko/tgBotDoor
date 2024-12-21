@@ -3,12 +3,16 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var child_process_1 = require("child_process");
 console.log(__dirname);
 var pull = function (ctx) {
-    (0, child_process_1.exec)("git pull", function (error, stdout, stderr) {
+    (0, child_process_1.exec)("bash ".concat(__dirname, "/pull.sh"), function (error, stdout, stderr) {
         if (error) {
+            ctx.reply(error.message);
+            ctx.reply('error');
             console.log("error: ".concat(error.message));
             return;
         }
         if (stderr) {
+            ctx.reply(stderr);
+            ctx.reply('error');
             console.log("stderr: ".concat(stderr));
             return;
         }
@@ -17,12 +21,16 @@ var pull = function (ctx) {
     });
 };
 var push = function (ctx) {
-    (0, child_process_1.exec)("git add .;git commit -m \"$(date)\";git push origin main", function (error, stdout, stderr) {
+    (0, child_process_1.exec)("bash ".concat(__dirname, "/push.sh"), function (error, stdout, stderr) {
         if (error) {
+            ctx.reply(error.message);
+            ctx.reply('error');
             console.log("error: ".concat(error.message));
             return;
         }
         if (stderr) {
+            ctx.reply(stderr);
+            ctx.reply('error');
             console.log("stderr: ".concat(stderr));
             return;
         }
@@ -33,10 +41,14 @@ var push = function (ctx) {
 var restart = function (ctx) {
     (0, child_process_1.exec)("systemctl restart myAvtostart", function (error, stdout, stderr) {
         if (error) {
+            ctx.reply(error.message);
+            ctx.reply('error');
             console.log("error: ".concat(error.message));
             return;
         }
         if (stderr) {
+            ctx.reply(stderr);
+            ctx.reply('error');
             console.log("stderr: ".concat(stderr));
             return;
         }

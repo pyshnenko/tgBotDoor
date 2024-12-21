@@ -10,6 +10,8 @@ const fs = require("fs");
 let ni = os.networkInterfaces();
 const axios = require('axios');
 import bash from './src/scripts/bash';
+import { startKeyboard, startKeyboardAny, yORnKeyboard } from './src/funcs/keyboards';
+import { userData, savedData } from './src/types/data';
 
 const vers = '1.4.2';
 
@@ -55,20 +57,6 @@ catch {
     saveTime(1);
 }
 
-interface userData {
-    id: number,
-    name: string,
-    comment: string
-}
-
-interface savedData {
-    admins: number[],
-    notAdmins: number[],
-    reqUsers: number[],
-    timeDelay: number,
-    usersData: userData[]
-}
-
 let serviceSett: savedData = {
     admins: [],
     notAdmins: [],
@@ -80,13 +68,13 @@ let serviceSett: savedData = {
 const okLbl = '✅ ';
 const nokLbl = '❌ ';
 
-fs.access("admins.txt", function (error) {
+fs.access("admins.txt", function (error: any) {
     if (error) {
         console.log("Файл не найден");
-        fs.open('admins.txt', 'w', (err) => {
+        fs.open('admins.txt', 'w', (err: any) => {
             if (err) throw err;
             console.log('File created');
-            fs.writeFile("admins.txt", JSON.stringify(serviceSett), function (error) {
+            fs.writeFile("admins.txt", JSON.stringify(serviceSett), function (error: any) {
                 if (error) throw error;
                 console.log('write done');
                 let data = fs.readFileSync("admins.txt", "utf8");
@@ -102,10 +90,10 @@ fs.access("admins.txt", function (error) {
     }
 });
 
-fs.access("system.txt", function (error) {
+fs.access("system.txt", function (error: any) {
     if (error) {
         console.log("Файл не найден");
-        fs.open('system.txt', 'w', (err) => {
+        fs.open('system.txt', 'w', (err: any) => {
             if (err) throw err;
             console.log('File created');
             saveTime();
@@ -125,7 +113,7 @@ bot.telegram.setMyCommands([
     { command: '/start', description: 'Старт' }
 ])
 
-bot.start((ctx) => {
+bot.start((ctx: any) => {
     //console.log(askName(ctx.from.id));
     const name = askName(ctx.from.id);
     if ((name !== null) || (name === 'undefined')) {
@@ -160,7 +148,7 @@ bot.start((ctx) => {
     }
 });
 
-bot.on('callback_query', async (ctx) => {
+bot.on('callback_query', async (ctx: any) => {
     needRestart = false;
     ctx.answerCbQuery();
     ctx.deleteMessage();
@@ -195,7 +183,7 @@ bot.on('callback_query', async (ctx) => {
     }
     else if (command === 'newAdmAsk') {
         ctx.reply(`Пользователю ${id} направлено приглашение`);
-        yORnKeyboard(id, 'Приветствую. Принять приглашение на подключение к воротам?', `addAdmAsk${ctx.from.id}`, 'start');
+        yORnKeyboard(bot, id, 'Приветствую. Принять приглашение на подключение к воротам?', `addAdmAsk${ctx.from.id}`, 'start');
     }
     else if (command === 'addAdmAsk') {
         if (serviceSett.admins.includes(ctx.from.id)) ctx.reply('Уже добавлен');
@@ -234,7 +222,7 @@ bot.on('callback_query', async (ctx) => {
     }
     else if (command === 'newUsrAsk') {
         ctx.reply(`Пользователю ${id} направлено приглашение`);
-        yORnKeyboard(id, 'Приветствую. Принять приглашение на подключение к воротам?', `addUsrAsk${ctx.from.id}`, 'start');
+        yORnKeyboard(bot, id, 'Приветствую. Принять приглашение на подключение к воротам?', `addUsrAsk${ctx.from.id}`, 'start');
     }
     else if (command === 'addAdmAsk') {
         if (serviceSett.admins.includes(ctx.from.id)) ctx.reply('Уже добавлен');
@@ -303,7 +291,7 @@ bot.on('callback_query', async (ctx) => {
         ctx.session = {};
     }
     else if (command === 'simpleDel') {
-        yORnKeyboard(ctx.from.id, `Удаляем ${askName(id)}?`, `delete:::${id}`, 'start');
+        yORnKeyboard(bot, ctx.from.id, `Удаляем ${askName(id)}?`, `delete:::${id}`, 'start');
     }
     else if (command === 'delete:::') {
         if (serviceSett.admins.indexOf(id) >= 1) {
@@ -405,7 +393,7 @@ bot.on('text', async (ctx) => {
                 }
                 else if (session.mode === 'wifiPass') {
                     session = { ...session, mode: 'saveWifi', pass: ctx.message.text };
-                    yORnKeyboard(ctx.from.id, 'Добавим ' + session.name, 'addNewNet', 'start');
+                    yORnKeyboard(bot, ctx.from.id, 'Добавим ' + session.name, 'addNewNet', 'start');
                 }
                 else if (session.mode === 'wifiName') {
                     session = { mode: 'wifiPass', name: ctx.message.text };
@@ -530,47 +518,15 @@ const saveData = async function () {
     })
 }
 
-const yORnKeyboard = function (id: number, text: string, okCallb?:string, nOkCallb?:string) {
-    bot.telegram.sendMessage(id, text || 'Подтверждаете?', Markup.inlineKeyboard([
-        Markup.button.callback(okLbl + 'Да', okCallb || 'Yes'),
-        Markup.button.callback(nokLbl + 'Нет', nOkCallb || 'Cancel')
-    ]))
-}
-const startKeyboard = async function (ctx: any, text: string, admin: boolean) {
-    console.log(admin);
-    const admKeyboard = Markup.keyboard([
-        /*['Запросы', 'Пользователи', 'Статус'],
-        ['Добавить по id', 'Удалить пользователя'],
-        ['Открыть ворота'],
-        ['Закрыть ворота'],*/
-        ['Открыть ворота', 'Закрыть ворота'],
-        ['~ Параметры ~']
-    ]);
-    const notAdminKeyboard = Markup.keyboard([['Открыть ворота'],
-    ['Закрыть ворота']]);
-    ctx.replyWithHTML(
-        text || 'Вот кнопка для ворот\n',
-        admin ? admKeyboard : notAdminKeyboard)
-}
-const startKeyboardAny = async function (ctx: any) {
-    const admKeyboard = Markup.keyboard([
-        ['Запросы', 'Пользователи', 'Статус'],
-        ['Добавить по id', 'Удалить пользователя'],
-        ['~ Назад ~']
-    ]);
-    ctx.replyWithHTML(
-        'Параметры\n',admKeyboard)
-}
-
 bot.launch(console.log('bot start'));
 
-bot.catch((err) => console.log(err));
+bot.catch((err: any) => console.log(err));
 
-bot.handleError((err) => {
+bot.handleError((err: any) => {
     console.log('handler: ' + err.toString());
 });
 
-bot.on('error', (err) => console.log('on ' + err.toString()))
+bot.on('error', (err: any) => console.log('on ' + err.toString()))
 
 process.on('uncaughtException', (err, origin) => {
     console.log('ERROR');
