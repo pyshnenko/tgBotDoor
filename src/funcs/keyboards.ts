@@ -3,7 +3,7 @@ const { Extra, Markup } = require('telegraf');
 const okLbl = '✅ ';
 const nokLbl = '❌ ';
 
-export const startKeyboard = async function (ctx: any, text: string, admin: boolean) {
+export const startKeyboard = async function (ctx: any, text: string|null, admin: boolean) {
     console.log(admin);
     const admKeyboard = Markup.keyboard([
         /*['Запросы', 'Пользователи', 'Статус'],
