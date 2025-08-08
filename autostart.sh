@@ -1,4 +1,4 @@
 #!/bin/bash
 
-cd /home/spamigor/tgBotDoor
+cd /home/pi/tgBotDoor
 npm start
