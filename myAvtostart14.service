@@ -1,0 +1,16 @@
+[Unit]
+
+Description=My Script Service
+
+After=multi-user.target
+
+[Service]
+Restart=always
+RestartSec=5s
+Type=idle
+
+ExecStart=/home/spamigor/tgBotDoor/autostart.sh
+
+[Install]
+
+WantedBy=multi-user.target
