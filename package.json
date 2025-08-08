@@ -17,5 +17,8 @@
     "pigpio": "^3.3.1",
     "telegraf": "^4.16.3",
     "typescript": "^5.9.2"
+  },
+  "devDependencies": {
+    "@types/node": "^24.2.0"
   }
 }
