@@ -1,7 +1,7 @@
 #!/bin/bash
 i=0
 echo "Hello"
-cat /home/pi/bot/system.txt | while read y
+cat /home/pi/tgBotDoor/system.txt | while read y
 do
   fullDate=$(date)
   if [[ "$i" == "0" ]]; then
@@ -11,8 +11,8 @@ do
       then echo "date > 5"
       fidate=$(date +%s)
       fidate=$((fidate+90000))
-      echo "$fidate" > /home/pi/bot/system.txt
-      echo "autoreboot at $fullDate" >> /home/pi/bot/timeReboot.txt
+      echo "$fidate" > /home/pi/tgBotDoor/system.txt
+      echo "autoreboot at $fullDate" >> /home/pi/tgBotDoor/timeReboot.txt
       /sbin/reboot
     else
       echo "date < 5"
@@ -26,24 +26,24 @@ do
     git pull origin main
     fidate=$(date +%s)
     fidate=$((fidate+90000))
-    echo "$fidate" > /home/pi/bot/system.txt
+    echo "$fidate" > /home/pi/tgBotDoor/system.txt
     /sbin/reboot
   fi
   if [[ "$y" == "push"* ]]; then
     echo "git push"
-    cd /home/pi/bot
+    cd /home/pi/tgBotDoor
     git add .
     git commit -m "$(date)"
     git push origin main
     fidate=$(date +%s)
     fidate=$((fidate+90000))
-    echo "$fidate" > /home/pi/bot/system.txt
+    echo "$fidate" > /home/pi/tgBotDoor/system.txt
   fi
   if [[ "$y" == "restart"* ]]; then
     echo "restart"
     sudo systemctl restart myAvtostart
     echo "done"
-    echo "$fidate" > /home/pi/bot/system.txt
+    echo "$fidate" > /home/pi/tgBotDoor/system.txt
   fi
   i=$((i+1))
 done
